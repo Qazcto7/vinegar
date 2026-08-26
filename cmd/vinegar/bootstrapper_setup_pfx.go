@@ -21,10 +21,35 @@ import (
 	. "github.com/pojntfx/go-gettext/pkg/i18n"
 )
 
+// dxvkLocalDLLs are the DLL basenames DXVK's release tarball installs
+// directly into the Studio directory (see the extraction loop in
+// setupDXVK's install step below), rather than into the Wineprefix.
+var dxvkLocalDLLs = []string{"d3d8.dll", "d3d9.dll", "d3d10core.dll", "d3d11.dll", "dxgi.dll"}
+
+// removeLocalDXVK removes any DXVK DLLs left over in the Studio
+// directory from a previous install. Since a DLL sitting alongside
+// RobloxStudioBeta.exe takes priority over both Wine's own D3D11
+// implementation and any DLL override, leaving these in place after
+// switching away from DXVK/DXVK-Sarek as the renderer means DXVK
+// keeps being used regardless of the new setting.
+func (b *bootstrapper) removeLocalDXVK() error {
+	for _, name := range dxvkLocalDLLs {
+		path := filepath.Join(b.dir, name)
+		if v, err := dxvk.DLLVersion(path); err != nil || v == "" {
+			continue // not present, or not a DXVK DLL - leave it alone
+		}
+		if err := os.Remove(path); err != nil {
+			return fmt.Errorf("remove local dxvk dll %s: %w", name, err)
+		}
+		slog.Info("Removed leftover DXVK DLL", "name", name)
+	}
+	return nil
+}
+
 func (b *bootstrapper) setupDXVK() error {
 	version := b.cfg.Studio.DXVKVersion()
 	if version == "" {
-		return nil
+		return b.removeLocalDXVK()
 	}
 
 	// If DXVK is installed in the wineprefix, uninstallation
@@ -205,7 +230,19 @@ func (b *bootstrapper) installWebView(installed string) error {
 	if installed != "" && installed != version {
 		b.message(L("Uninstalling WebView"), "current", installed, "new", version)
 		if err := webview2.Uninstall(b.pfx, installed); err != nil {
-			return fmt.Errorf("uninstall: %w", err)
+			// A wineserver left running against this prefix from a crash,
+			// or from a WebView2 build installed manually outside of
+			// Vinegar (e.g. through the system Wine install), can hold
+			// onto the registry/DLL locks the (un)installer needs. This
+			// surfaces as a version mismatch or "exit status 4" and used
+			// to abort setup outright. Killing the wineserver and retrying
+			// once resolves it without requiring the user to manually
+			// wipe the prefix.
+			slog.Warn("WebView uninstall failed, retrying after resetting Wineprefix", "err", err)
+			b.pfx.Kill()
+			if err := webview2.Uninstall(b.pfx, installed); err != nil {
+				return fmt.Errorf("uninstall: %w", err)
+			}
 		}
 	}
 	if installed == version || version == "" {
@@ -216,5 +253,13 @@ func (b *bootstrapper) installWebView(installed string) error {
 	b.message(L("Installing WebView"), "version", version, "path", inst)
 	defer b.performing()()
 
-	return webview2.Install(b.pfx, inst)
+	if err := webview2.Install(b.pfx, inst); err != nil {
+		slog.Warn("WebView install failed, retrying after resetting Wineprefix", "err", err)
+		b.pfx.Kill()
+		if err := webview2.Install(b.pfx, inst); err != nil {
+			return fmt.Errorf("install: %w", err)
+		}
+	}
+
+	return nil
 }

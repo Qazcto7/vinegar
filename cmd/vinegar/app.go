@@ -155,6 +155,24 @@ func (a *app) startup(_ gio.Application) {
 	sm := a.GetStyleManager()
 	cb := a.updateWineTheme
 	sm.ConnectSignal("notify::dark", &cb)
+
+	// Register Vinegar as the handler for Studio's browser-login callback
+	// (the roblox-studio-auth: URI scheme) unconditionally, up front.
+	//
+	// This used to only happen reactively, inside handleRobloxLog, the
+	// first time Studio logged "LoginDialog Error: Embedded Web Browser
+	// fail to load". That line is only ever logged when Studio *attempts*
+	// and fails to load the embedded WebView2 browser — so for anyone who
+	// disabled WebView2 up front (the documented workaround for the
+	// WebView2 focus/crash issues), or whose prefix never hit that
+	// specific failure, the scheme handler was never registered at all.
+	// The browser would then have nowhere to send the login code back to,
+	// so "Log in via browser" would appear to work but silently loop
+	// forever back to the same login error, no matter how many times it
+	// was retried.
+	if err := a.setMime(); err != nil {
+		slog.Warn("Failed to register browser login handler", "err", err)
+	}
 }
 
 func (a *app) commandLine(_ gio.Application, clPtr uintptr) int32 {

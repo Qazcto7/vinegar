@@ -168,17 +168,21 @@ func (b *bootstrapper) handleRobloxLog(line string) {
 	}
 
 	// time,runtime,code,code2[,level ] ...
+	//
+	// Some Studio log lines (such as crashpad lines) only ever contain
+	// 3 comma-separated fields instead of the expected 4. SplitN with n=4
+	// then returns a 3-element slice, and slicing that from index 3 used
+	// to yield an empty slice, which tripped the "len(entry) != 1" panic
+	// below on every single one of those lines and killed the whole
+	// bootstrapper. Requiring all 4 fields up-front avoids that: anything
+	// shorter is simply logged as-is instead of being torn apart.
 	{
 		entry := strings.SplitN(line, ",", 4)
-		if len(entry) < 3 {
+		if len(entry) < 4 {
 			slog.Log(context.Background(), slog.LevelInfo, line)
 			return
 		}
-		entry = entry[3:]
-		if len(entry) != 1 {
-			panic(entry)
-		}
-		line = entry[0]
+		line = entry[3]
 	}
 
 	i := strings.Index(line, " [")

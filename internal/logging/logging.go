@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/lmittmann/tint"
@@ -84,11 +85,21 @@ func cleanupLogs() error {
 		return err
 	}
 
-	// Immediately start removing log files that aren't beyond
-	// minimum count and this file is not managed by Vinegar or is old
-	// (determined by filename length)
+	// Keep the most recent 15 log files; remove older ones, but only if
+	// their name actually parses as one of Vinegar's own RFC3339 log
+	// filenames - anything else is left alone.
+	//
+	// This used to check len(log.Name()) != 29, which only holds for a
+	// numeric offset such as "+03:00". RFC3339's "Z" suffix for UTC is
+	// shorter, so on a system configured for UTC, no filename ever
+	// matched and old logs were never cleaned up at all.
+	const keep = 15
 	for i, log := range logs {
-		if i > len(logs)-16 || len(log.Name()) != 29 {
+		if i > len(logs)-keep-1 {
+			continue
+		}
+		name := strings.TrimSuffix(log.Name(), ".log")
+		if _, err := time.Parse(time.RFC3339, name); err != nil {
 			continue
 		}
 		if err := os.Remove(filepath.Join(dir, log.Name())); err != nil {

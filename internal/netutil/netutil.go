@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"unsafe"
 
 	"codeberg.org/puregotk/puregotk/v4/glib"
 	"codeberg.org/puregotk/puregotk/v4/gtk"
@@ -49,6 +48,26 @@ func DownloadProgress(url, file string, pbar *gtk.ProgressBar) error {
 		return fmt.Errorf("%w: %s", ErrBadStatus, resp.Status)
 	}
 
+	// A missing/unknown Content-Length is reported as -1. Converting
+	// that straight to uint64 used to wrap around to ~1.8e19, which
+	// silently broke two things at once: the progress fraction stayed
+	// at effectively 0% for the whole download, and the timeout below
+	// only ever stopped itself once pc.current reached that huge
+	// pc.total - i.e. never - leaking a 16ms GLib timer for the rest of
+	// the process's lifetime. Fall back to a pulsing (indeterminate)
+	// bar when the length isn't known.
+	if resp.ContentLength <= 0 {
+		var pulsecb glib.SourceFunc = func(uintptr) bool {
+			pbar.Pulse()
+			return true
+		}
+		id := glib.TimeoutAdd(128, &pulsecb, 0)
+		defer glib.SourceRemove(id)
+
+		_, err = io.Copy(out, resp.Body)
+		return err
+	}
+
 	pc := &progressCounter{
 		total: uint64(resp.ContentLength),
 		pbar:  pbar,
@@ -58,14 +77,11 @@ func DownloadProgress(url, file string, pbar *gtk.ProgressBar) error {
 		pbar.SetFraction(float64(pc.current) / float64(pc.total))
 		return pc.current != pc.total
 	}
-	glib.TimeoutAdd(16, &idlecb, uintptr(unsafe.Pointer(nil)))
+	id := glib.TimeoutAdd(16, &idlecb, 0)
+	defer glib.SourceRemove(id)
 
 	_, err = io.Copy(out, io.TeeReader(resp.Body, pc))
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // Download downloads the named url to the named file. If an error

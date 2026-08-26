@@ -120,7 +120,7 @@ func (b *bootstrapper) installDeployment() error {
 		return fmt.Errorf("fetch packages: %w", err)
 	}
 
-	sums := make([]string, len(pkgs))
+	sums := make([]string, 0, len(pkgs))
 	for _, pkg := range pkgs {
 		sums = append(sums, pkg.Checksum)
 	}

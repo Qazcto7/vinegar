@@ -23,11 +23,28 @@ import (
 )
 
 const (
+	// DXVK 3.0 rewrote shader compilation (dxbc-spirv) and now hard-
+	// requires Vulkan 1.3. Confirmed on real hardware (an old NVIDIA
+	// Kepler GT 740M, not just the Haswell iGPU this fork already
+	// steers away from DXVK) that this makes DXVK 3.0.2 fail outright
+	// with "No adapters found ... A Vulkan 1.3 capable setup is
+	// required" - i.e. DXVK becomes entirely unusable on older GPUs,
+	// not just slower. Staying on the last version without that
+	// requirement.
 	DXVKVersion      = "2.7.1"
 	DXVKSarekVersion = "Sarek-1.11.0-async"
 	WebViewVersion   = "144.0.3719.92"
 
-	DesktopsResolution = "1814x1024"
+	// A conservative size that fits inside virtually any real screen,
+	// including small laptop panels (e.g. 1366x768). The original
+	// 1814x1024 default exceeded common screen heights, which made the
+	// Wine virtual desktop (a fixed-size window Wine itself is fully
+	// responsible for sizing, not the Linux window manager) overflow the
+	// display and appear to force Studio into fullscreen on every launch,
+	// with no way to move or resize it. Users can still set a larger or
+	// smaller size manually in Settings -> Advanced Wine Settings ->
+	// Virtual Desktop.
+	DesktopsResolution = "1280x720"
 )
 
 // Order must be the same as the renderer model in the configurator.
@@ -116,6 +133,57 @@ func Default() (cfg *Config) {
 	// where the first GPU is a iGPU.
 	if len(sysinfo.Cards) >= 2 && sysinfo.Cards[0].Embedded {
 		cfg.Studio.ForcedGpu = sysinfo.Cards[1].Addr()
+	}
+
+	// Prefer a stable, non-Vulkan renderer by default on GPUs that are
+	// known to have incomplete Vulkan support, such as Intel Haswell
+	// iGPUs (Mesa itself warns "Haswell Vulkan support is incomplete").
+	// Forcing DXVK/Vulkan there leads to shader-compile stalls and
+	// graphical lockups in Studio. Users who know their setup is fine
+	// can still switch back to DXVK/Vulkan manually.
+	//
+	// Determining which card actually renders: if a GPU is explicitly
+	// forced, use that one. Otherwise, on a hybrid/laptop system with no
+	// forced GPU, rendering (and always display output) defaults to the
+	// embedded GPU rather than whichever card happens to enumerate
+	// first - naively checking Cards[0] missed the Haswell iGPU
+	// entirely on systems where a discrete GPU (e.g. an older NVIDIA
+	// Optimus card) enumerates before it.
+	var renderCard sysinfo.Card
+	var found bool
+	switch {
+	case cfg.Studio.ForcedGpu != "":
+		for _, card := range sysinfo.Cards {
+			if card.Addr() == cfg.Studio.ForcedGpu {
+				renderCard, found = card, true
+			}
+		}
+	default:
+		for _, card := range sysinfo.Cards {
+			if card.Embedded {
+				renderCard, found = card, true
+				break
+			}
+		}
+		if !found && len(sysinfo.Cards) > 0 {
+			renderCard, found = sysinfo.Cards[0], true
+		}
+	}
+	if found && renderCard.IncompleteVulkan() {
+		cfg.Studio.Renderer = "D3D11FL10"
+	}
+
+	// Wine's native Wayland driver (winewayland.drv), used automatically
+	// whenever WAYLAND_DISPLAY is set, does not yet implement the
+	// window-manager-mediated focus/input routing that WebView2's child
+	// windows rely on: clicks and keyboard input silently fail to reach
+	// the login page. Running Studio inside Wine's virtual desktop avoids
+	// this entirely, since everything is then composited into a single
+	// regular window. This is the same workaround documented on
+	// Vinegar's Troubleshooting page; users on an X11/XWayland session
+	// are unaffected and can disable this in Settings if desired.
+	if os.Getenv("WAYLAND_DISPLAY") != "" {
+		cfg.Studio.Desktop = DesktopsResolution
 	}
 
 	// Default to use the VinegarHQ Kombucha builds to be
