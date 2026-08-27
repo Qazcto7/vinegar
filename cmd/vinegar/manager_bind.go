@@ -124,10 +124,8 @@ func (m *manager) connectElements() {
 
 	card := gutil.GetObject[adw.ComboRow](b, "cards_row")
 	cards := gutil.GetObject[gtk.StringList](b, "cards")
-	values := make(map[string]string, len(sysinfo.Cards))
 	for i, c := range sysinfo.Cards {
 		shown := fmt.Sprintf("%d: %s", c.Index, c.Product)
-		values[shown] = c.Addr()
 		cards.Append(shown)
 
 		if c.Addr() == cfg.ForcedGpu {
@@ -135,7 +133,10 @@ func (m *manager) connectElements() {
 		}
 	}
 	signalSave(&card.Widget, "notify::selected-item", func() {
-		slog.Info("Signaled", "v", values, "i", card.GetSelected(), "cfg", cfg.ForcedGpu)
+		cfg.ForcedGpu = ""
+		if i := card.GetSelected(); i > 0 {
+			cfg.ForcedGpu = sysinfo.Cards[i-1].Addr()
+		}
 	})
 
 	simpleEntry("launcher_row", &cfg.Launcher)
