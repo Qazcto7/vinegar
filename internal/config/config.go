@@ -176,6 +176,7 @@ func Default() (cfg *Config) {
 		}
 	}
 	if found && renderCard.IncompleteVulkan() {
+		slog.Info("Auto-selected D3D11FL10 renderer", "reason", "incomplete Vulkan support", "gpu", renderCard.String())
 		cfg.Studio.Renderer = "D3D11FL10"
 	}
 
