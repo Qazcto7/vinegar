@@ -31,7 +31,7 @@ const (
 	// required" - i.e. DXVK becomes entirely unusable on older GPUs,
 	// not just slower. Staying on the last version without that
 	// requirement.
-	DXVKVersion      = "2.7.1"
+	DXVKVersion = "2.7.1"
 	// v1.13.0 "Pacemaker" - confirmed working tarball name against the
 	// actual release asset (dxvk-sarek-1.13.0.tar.gz). No "-async" suffix:
 	// since v1.12.0 there is only a single unified build; the shader
@@ -285,23 +285,6 @@ func (c *Config) Prefix() *wine.Prefix {
 	env["WINEDEBUG"] += ",warn+seh" // required to read Roblox logs
 	env["XR_LOADER_DEBUG"] = "none" // already shown in Roblox log
 	env["WINEDLLOVERRIDES"] += ";" + "dxdiagn,winemenubuilder.exe,mscoree,mshtml="
-
-	// Studio's editor viewport keeps the cursor visible while orbiting
-	// the camera with a mouse button held, so Wine's native Wayland
-	// driver never engages its low-latency relative-motion path for
-	// it (that path requires the cursor to be hidden); Studio instead
-	// polls GetCursorPos once per frame and calls SetCursorPos to
-	// recenter, which involves an async round trip to the compositor
-	// under Wayland. At uneven or low frame rates that round trip
-	// falls behind real mouse movement, which is felt as laggy or
-	// suddenly "jumpy" camera control that gets worse the slower/more
-	// uneven frames are (vinegarhq/vinegar#750, #766, #714, #851).
-	// This has no effect outside Studio's editor (e.g. Play Solo,
-	// which does hide the cursor) and no effect under X11/XWayland
-	// sessions, where this variable is simply unused.
-	if os.Getenv("WAYLAND_DISPLAY") != "" {
-		env["WINE_WAYLAND_EMULATE_MOUSE_WARP"] = "1"
-	}
 
 	if !c.Debug {
 		env["WINEDEBUG"] += ",fixme-all,err-kerberos,err-ntlm,err-combase"
