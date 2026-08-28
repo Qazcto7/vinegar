@@ -92,7 +92,7 @@ func (b *bootstrapper) execute(args ...string) error {
 
 	cmd.Process.WithHandle(func(h uintptr) {
 		if err := b.registerGame(h); err != nil {
-			slog.Error("Failed to register with GameMode", "err", err)
+			slog.Warn("Failed to register with GameMode", "err", err)
 		}
 	})
 
