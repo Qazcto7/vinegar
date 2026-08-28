@@ -240,6 +240,23 @@ func (a *app) setMime() error {
 	if !ok || err != nil {
 		return fmt.Errorf("browser login set: %w", err)
 	}
+
+	// Also register as the default handler for opening places/models
+	// directly (the roblox-studio: URI scheme, used e.g. by the recent
+	// list on the Studio home screen) and for the associated file
+	// types. Unlike the auth scheme above, failing to register these
+	// is not fatal - Studio can still be launched manually - so we
+	// only warn.
+	for _, t := range []string{
+		"x-scheme-handler/roblox-studio",
+		"application/x-roblox-place",
+		"application/x-roblox-model",
+	} {
+		if ok, err := selfApp.SetAsDefaultForType(t); !ok || err != nil {
+			slog.Warn("Failed to register default handler", "type", t, "err", err)
+		}
+	}
+
 	return nil
 }
 
