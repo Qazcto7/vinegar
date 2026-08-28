@@ -238,6 +238,9 @@ func (a *app) setMime() error {
 	slog.Info("Setting as default application for browser login")
 	ok, err := selfApp.SetAsDefaultForType("x-scheme-handler/roblox-studio-auth")
 	if !ok || err != nil {
+		if err != nil && strings.Contains(err.Error(), "portal.OpenURI") {
+			return fmt.Errorf("browser login set: %w (this usually means xdg-desktop-portal-gtk is missing, or the wrong portal backend is selected - see the Troubleshooting page on vinegarhq.org)", err)
+		}
 		return fmt.Errorf("browser login set: %w", err)
 	}
 	return nil
