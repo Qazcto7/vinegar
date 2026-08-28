@@ -241,69 +241,69 @@ func (a *app) updateWineTheme() {
 }
 
 var darkThemeValues = []wine.RegistryValue{
-	{"ActiveBorder", "34 34 38"},            // #222226 window_bg_color
-	{"ActiveTitle", "46 46 50"},             // #2e2e32 headerbar_bg_color
-	{"AppWorkSpace", "45 45 49"},            // midpoint between window/view background
-	{"Background", "29 29 32"},              // #1d1d20 view_bg_color
-	{"ButtonAlternativeFace", "98 160 234"}, // accent blue from Adwaita
-	{"ButtonDkShadow", "22 22 25"},          // slightly darker than view_bg
-	{"ButtonFace", "46 46 50"},              // #2e2e32 headerbar
-	{"ButtonHilight", "57 57 61"},           // lifted tone from card_bg_color overlay
-	{"ButtonLight", "53 53 57"},
-	{"ButtonShadow", "25 25 28"},
-	{"ButtonText", "255 255 255"},
-	{"GradientActiveTitle", "46 46 50"},
-	{"GradientInactiveTitle", "40 40 44"}, // sidebar_backdrop_color #28282c
-	{"GrayText", "136 136 136"},
-	{"Hilight", "98 160 234"}, // accent blue
-	{"HilightText", "255 255 255"},
-	{"InactiveBorder", "40 40 44"}, // sidebar_backdrop
-	{"InactiveTitle", "40 40 44"},
-	{"InactiveTitleText", "211 211 211"},
-	{"InfoText", "255 255 255"},
-	{"InfoWindow", "54 54 58"}, // dialog_bg_color #36363a
-	{"Menu", "54 54 58"},       // dialog/popover background
-	{"MenuBar", "46 46 50"},    // keep menu slightly lighter
-	{"MenuHilight", "98 160 234"},
-	{"MenuText", "255 255 255"},
-	{"Scrollbar", "46 46 50"},
-	{"TitleText", "255 255 255"},
-	{"Window", "29 29 32"},      // view_bg_color
-	{"WindowFrame", "46 46 50"}, // subtle outline color
-	{"WindowText", "255 255 255"},
+	{Name: "ActiveBorder", Data: "34 34 38"},            // #222226 window_bg_color
+	{Name: "ActiveTitle", Data: "46 46 50"},             // #2e2e32 headerbar_bg_color
+	{Name: "AppWorkSpace", Data: "45 45 49"},            // midpoint between window/view background
+	{Name: "Background", Data: "29 29 32"},              // #1d1d20 view_bg_color
+	{Name: "ButtonAlternativeFace", Data: "98 160 234"}, // accent blue from Adwaita
+	{Name: "ButtonDkShadow", Data: "22 22 25"},          // slightly darker than view_bg
+	{Name: "ButtonFace", Data: "46 46 50"},              // #2e2e32 headerbar
+	{Name: "ButtonHilight", Data: "57 57 61"},           // lifted tone from card_bg_color overlay
+	{Name: "ButtonLight", Data: "53 53 57"},
+	{Name: "ButtonShadow", Data: "25 25 28"},
+	{Name: "ButtonText", Data: "255 255 255"},
+	{Name: "GradientActiveTitle", Data: "46 46 50"},
+	{Name: "GradientInactiveTitle", Data: "40 40 44"}, // sidebar_backdrop_color #28282c
+	{Name: "GrayText", Data: "136 136 136"},
+	{Name: "Hilight", Data: "98 160 234"}, // accent blue
+	{Name: "HilightText", Data: "255 255 255"},
+	{Name: "InactiveBorder", Data: "40 40 44"}, // sidebar_backdrop
+	{Name: "InactiveTitle", Data: "40 40 44"},
+	{Name: "InactiveTitleText", Data: "211 211 211"},
+	{Name: "InfoText", Data: "255 255 255"},
+	{Name: "InfoWindow", Data: "54 54 58"}, // dialog_bg_color #36363a
+	{Name: "Menu", Data: "54 54 58"},       // dialog/popover background
+	{Name: "MenuBar", Data: "46 46 50"},    // keep menu slightly lighter
+	{Name: "MenuHilight", Data: "98 160 234"},
+	{Name: "MenuText", Data: "255 255 255"},
+	{Name: "Scrollbar", Data: "46 46 50"},
+	{Name: "TitleText", Data: "255 255 255"},
+	{Name: "Window", Data: "29 29 32"},      // view_bg_color
+	{Name: "WindowFrame", Data: "46 46 50"}, // subtle outline color
+	{Name: "WindowText", Data: "255 255 255"},
 }
 
 var lightThemeValues = []wine.RegistryValue{
-	{"ActiveBorder", "255 255 255"},
-	{"ActiveTitle", "50 150 250"},
-	{"AppWorkSpace", "128 128 128"},
-	{"Background", "37 111 149"},
-	{"ButtonAlternateFace", "255 255 255"},
-	{"ButtonAlternativeFace", "98 160 234"},
-	{"ButtonDkShadow", "106 106 106"},
-	{"ButtonFace", "245 245 245"},
-	{"ButtonHilight", "255 255 255"},
-	{"ButtonLight", "227 227 227"},
-	{"ButtonShadow", "166 166 166"},
-	{"ButtonText", "0 0 0"},
-	{"GradientActiveTitle", "50 150 250"},
-	{"GradientInactiveTitle", "128 128 128"},
-	{"GrayText", "106 106 106"},
-	{"Hilight", "48 150 250"},
-	{"HilightText", "255 255 255"},
-	{"HotTrackingColor", "48 150 250"},
-	{"InactiveBorder", "255 255 255"},
-	{"InactiveTitle", "128 128 128"},
-	{"InactiveTitleText", "200 200 200"},
-	{"InfoText", "0 0 0"},
-	{"InfoWindow", "255 255 255"},
-	{"Menu", "255 255 255"},
-	{"MenuBar", "255 255 255"},
-	{"MenuHilight", "48 150 250"},
-	{"MenuText", "0 0 0"},
-	{"Scrollbar", "255 255 255"},
-	{"TitleText", "0 0 0"},
-	{"Window", "255 255 255"},
-	{"WindowFrame", "158 158 158"},
-	{"WindowText", "0 0 0"},
+	{Name: "ActiveBorder", Data: "255 255 255"},
+	{Name: "ActiveTitle", Data: "50 150 250"},
+	{Name: "AppWorkSpace", Data: "128 128 128"},
+	{Name: "Background", Data: "37 111 149"},
+	{Name: "ButtonAlternateFace", Data: "255 255 255"},
+	{Name: "ButtonAlternativeFace", Data: "98 160 234"},
+	{Name: "ButtonDkShadow", Data: "106 106 106"},
+	{Name: "ButtonFace", Data: "245 245 245"},
+	{Name: "ButtonHilight", Data: "255 255 255"},
+	{Name: "ButtonLight", Data: "227 227 227"},
+	{Name: "ButtonShadow", Data: "166 166 166"},
+	{Name: "ButtonText", Data: "0 0 0"},
+	{Name: "GradientActiveTitle", Data: "50 150 250"},
+	{Name: "GradientInactiveTitle", Data: "128 128 128"},
+	{Name: "GrayText", Data: "106 106 106"},
+	{Name: "Hilight", Data: "48 150 250"},
+	{Name: "HilightText", Data: "255 255 255"},
+	{Name: "HotTrackingColor", Data: "48 150 250"},
+	{Name: "InactiveBorder", Data: "255 255 255"},
+	{Name: "InactiveTitle", Data: "128 128 128"},
+	{Name: "InactiveTitleText", Data: "200 200 200"},
+	{Name: "InfoText", Data: "0 0 0"},
+	{Name: "InfoWindow", Data: "255 255 255"},
+	{Name: "Menu", Data: "255 255 255"},
+	{Name: "MenuBar", Data: "255 255 255"},
+	{Name: "MenuHilight", Data: "48 150 250"},
+	{Name: "MenuText", Data: "0 0 0"},
+	{Name: "Scrollbar", Data: "255 255 255"},
+	{Name: "TitleText", Data: "0 0 0"},
+	{Name: "Window", Data: "255 255 255"},
+	{Name: "WindowFrame", Data: "158 158 158"},
+	{Name: "WindowText", Data: "0 0 0"},
 }
