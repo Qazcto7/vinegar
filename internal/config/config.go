@@ -79,6 +79,11 @@ type Studio struct {
 
 	ForcedVersion string `toml:"forced_version"`
 	Channel       string `toml:"channel"`
+
+	// Only used when Renderer is "DXVK-Sarek". Valid values are
+	// "dyasync", "async", "none". Empty leaves DXVK-Sarek's own
+	// runtime default (dyasync) in effect.
+	ShaderCompilationMethod string `toml:"shader_compilation_method"`
 }
 
 type Config struct {
@@ -310,6 +315,17 @@ func (c *Config) Prefix() *wine.Prefix {
 		env["DXVK_LOG_PATH"] = "none"
 		env["DXVK_STATE_CACHE_PATH"] = dirs.Cache
 
+		// DXVK-Sarek's shader compilation strategy (added in v1.12.0)
+		// can be picked at runtime; dyasync is the built-in default,
+		// tuned for weak CPUs/iGPUs, so this is only needed to opt into
+		// "async" (closer to pre-1.12 behavior) or "none" (no
+		// optimization, useful as a debugging baseline) instead.
+		if c.Studio.Renderer == "DXVK-Sarek" {
+			switch c.Studio.ShaderCompilationMethod {
+			case "dyasync", "async", "none":
+				env["DXVK_SHADER_COMPILATION_METHOD"] = c.Studio.ShaderCompilationMethod
+			}
+		}
 	}
 
 	for k, v := range env {
